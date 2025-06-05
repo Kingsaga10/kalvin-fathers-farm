@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -37,6 +37,10 @@ def read_root():
 
 @app.post("/crops/")
 def add_crop(crop: CropYield):
+    if crop.yield_amount < 0:
+        raise HTTPException(status_code=400, detail="Yield amount cannot be negative")
+    if crop.crop_type.strip() == "":
+        raise HTTPException(status_code=400, detail="Crop type cannot be empty")
     crops.append(crop)
     return {"message": "Crop yield added successfully", "data": crop}
 
@@ -46,6 +50,12 @@ def get_crops():
 
 @app.post("/inputs/")
 def add_input(input: InputUsage):
+    if input.quantity < 0:
+        raise HTTPException(status_code=400, detail="Quantity cannot be negative")
+    if input.input_type not in ["Fertilizer", "Water"]:
+        raise HTTPException(status_code=400, detail="Input type must be Fertilizer or Water")
+    if input.crop_id <= 0:
+        raise HTTPException(status_code=400, detail="Crop ID must be a positive integer")
     inputs.append(input)
     return {"message": "Input usage added successfully", "data": input}
 
